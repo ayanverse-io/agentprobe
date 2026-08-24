@@ -1,0 +1,15 @@
+# Fail the build if a dummy (or live) agent exceeds an ASR threshold.
+name: agentprobe-gate
+on: [push, pull_request]
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: ayanverse-io/agentprobe@v0.2
+        with:
+          agent: refuse
+          fail-above: "0"

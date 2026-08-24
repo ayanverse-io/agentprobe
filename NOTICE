@@ -1,0 +1,22 @@
+Third-party corpus notices. AgentProbe YAML is rewritten into our schema and
+sandbox tools; it is not a copy of their evaluation harnesses.
+
+InjecAgent (MIT)
+  Copyright (c) 2023 Qiusi Zhan
+  https://github.com/uiuc-kang-lab/InjecAgent
+  Used: 30 direct-harm + 32 data-steal *attacker intents*, mapped onto
+  AgentProbe tools. Not the 17×62 cartesian product.
+
+AgentDojo (MIT)
+  Copyright (c) 2024 Edoardo Debenedetti, Jie Zhang, Mislav Balunovic,
+  Luca Beurer-Kellner, Marc Fischer, and Florian Tramèr
+  https://github.com/ethz-spylab/agentdojo
+  Used: injection-task *goals* from workspace, banking, slack, and travel
+  suites. Not their environments, user tasks, or agent pipeline.
+
+BIPIA (Microsoft Research)
+  https://github.com/microsoft/BIPIA
+  Used: the idea of injecting the same payload at start / middle / end of
+  a document. Payloads remain AgentProbe's.
+
+Cite the original papers if you publish numbers on these cases.

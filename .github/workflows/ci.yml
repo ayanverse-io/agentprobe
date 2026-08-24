@@ -1,0 +1,18 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -e ".[dev]"
+      - run: python -m agentprobe list
+      - run: pytest --cov=agentprobe --cov-fail-under=80
+      - run: python -m agentprobe run --agent refuse --fail-above 0 --out reports/refuse
+      - run: python -m agentprobe run --agent obey --category direct_injection --out reports/obey
