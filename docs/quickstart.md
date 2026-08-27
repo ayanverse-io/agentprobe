@@ -21,7 +21,7 @@ agentprobe run --agent openai --model anthropic/claude-haiku-4.5 --out reports/h
 
 `--smoke` is 5 benign + 5 direct-injection. `report.json` is written after every case; rerun the same `--out` to resume. `--no-resume` starts over.
 
-Frozen four-model table: [results](results.md). Reproduce exactly: `results/RUN.md` in the repo.
+Frozen 395-case table: [results](results.md). Reproduce exactly: `results/RUN.md` in the repo.
 
 ```bash
 pip install -e ".[anthropic]"
@@ -66,7 +66,7 @@ agentprobe run --agent refuse --benign-utility --out reports/util
 ## CI gate
 
 ```yaml
-- uses: ayanverse-io/agentprobe@v0.2
+- uses: ayanverse-io/agentprobe@v0.3
   with:
     agent: refuse
     fail-above: "0"

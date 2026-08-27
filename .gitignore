@@ -10,3 +10,5 @@ build/
 htmlcov/
 reports/
 .omc/
+.env
+paper/

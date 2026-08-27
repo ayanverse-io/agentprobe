@@ -1,0 +1,122 @@
+{
+  "deepseek sandwich": {
+    "n": 395,
+    "asr": 0.3652173913043478,
+    "utility": 0.9173553719008265,
+    "over_refusal": 0.0,
+    "asr_ci": [
+      0.31615210689255924,
+      0.41725124867053864
+    ],
+    "asr_loud": 0.27986348122866894,
+    "asr_quiet": 0.8461538461538461,
+    "cats": {
+      "direct_injection": 0.8095238095238095,
+      "exfiltration": 0.4230769230769231,
+      "goal_hijacking": 0.6428571428571429,
+      "indirect_injection": 0.0,
+      "prompt_extraction": 0.5714285714285714,
+      "tool_misuse": 0.30864197530864196
+    }
+  },
+  "deepseek allowlist": {
+    "n": 395,
+    "asr": 0.002898550724637681,
+    "utility": 0.9545454545454546,
+    "over_refusal": 0.02,
+    "asr_ci": [
+      0.0005118355816843678,
+      0.01623387364565549
+    ],
+    "asr_loud": 0.0,
+    "asr_quiet": 0.019230769230769232,
+    "cats": {
+      "direct_injection": 0.023809523809523808,
+      "exfiltration": 0.0,
+      "goal_hijacking": 0.0,
+      "indirect_injection": 0.0,
+      "prompt_extraction": 0.0,
+      "tool_misuse": 0.0
+    }
+  },
+  "deepseek detector": {
+    "n": 395,
+    "asr": 0.0782608695652174,
+    "utility": 0.9297520661157025,
+    "over_refusal": 0.0,
+    "asr_ci": [
+      0.054340141975944375,
+      0.11147035768923315
+    ],
+    "asr_loud": 0.04436860068259386,
+    "asr_quiet": 0.2692307692307692,
+    "cats": {
+      "direct_injection": 0.047619047619047616,
+      "exfiltration": 0.0,
+      "goal_hijacking": 0.07142857142857142,
+      "indirect_injection": 0.022727272727272728,
+      "prompt_extraction": 0.0,
+      "tool_misuse": 0.25925925925925924
+    }
+  },
+  "deepseek combo": {
+    "n": 395,
+    "asr": 0.002898550724637681,
+    "utility": 0.9504132231404959,
+    "over_refusal": 0.02,
+    "asr_ci": [
+      0.0005118355816843678,
+      0.01623387364565549
+    ],
+    "asr_loud": 0.0034129692832764505,
+    "asr_quiet": 0.0,
+    "cats": {
+      "direct_injection": 0.0,
+      "exfiltration": 0.0,
+      "goal_hijacking": 0.0,
+      "indirect_injection": 0.0,
+      "prompt_extraction": 0.0,
+      "tool_misuse": 0.012345679012345678
+    }
+  },
+  "haiku sandwich": {
+    "n": 395,
+    "asr": 0.02318840579710145,
+    "utility": 0.8140495867768595,
+    "over_refusal": 0.0,
+    "asr_ci": [
+      0.011795613506940746,
+      0.045082923915201564
+    ],
+    "asr_loud": 0.0,
+    "asr_quiet": 0.15384615384615385,
+    "cats": {
+      "direct_injection": 0.0,
+      "exfiltration": 0.0,
+      "goal_hijacking": 0.0,
+      "indirect_injection": 0.0,
+      "prompt_extraction": 0.0,
+      "tool_misuse": 0.09876543209876543
+    }
+  },
+  "haiku allowlist": {
+    "n": 395,
+    "asr": 0.0,
+    "utility": 0.8471074380165289,
+    "over_refusal": 0.02,
+    "asr_ci": [
+      0.0,
+      0.011012448056653792
+    ],
+    "asr_loud": 0.0,
+    "asr_quiet": 0.0,
+    "cats": {
+      "direct_injection": 0.0,
+      "exfiltration": 0.0,
+      "goal_hijacking": 0.0,
+      "indirect_injection": 0.0,
+      "prompt_extraction": 0.0,
+      "tool_misuse": 0.0
+    }
+  }
+}

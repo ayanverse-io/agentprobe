@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import time
 from typing import Any
 
 from agentprobe.loop import ModelTurn, run_tool_loop
@@ -112,6 +113,7 @@ class OpenAICompleter:
             "model": self.model,
             "messages": [{"role": "system", "content": self.system}, *_to_openai(messages)],
             "tools": oai_tools,
+            "max_tokens": 2048,
         }
         if self._temperature is not None:
             kwargs["temperature"] = self._temperature
@@ -136,6 +138,9 @@ class OpenAICompleter:
                     self._temperature = None
                     kwargs.pop("temperature", None)
                     stripped = True
+                if "402" in err or "in_flight" in err:
+                    time.sleep(120)
+                    continue
                 if not stripped:
                     raise
         else:
@@ -144,7 +149,10 @@ class OpenAICompleter:
         calls: list[ToolCall] = []
         for tc in msg.tool_calls or []:
             args = tc.function.arguments
-            parsed = json.loads(args) if isinstance(args, str) else dict(args)
+            try:
+                parsed = json.loads(args) if isinstance(args, str) else dict(args)
+            except (json.JSONDecodeError, TypeError, ValueError):
+                parsed = {}
             calls.append(ToolCall(tc.function.name, parsed))
         return ModelTurn(text=msg.content or "", tool_calls=tuple(calls))
 
@@ -166,12 +174,14 @@ def openai_connect_kwargs() -> dict[str, Any]:
 
 
 class AnthropicAdapter:
-    def __init__(self, model: str = "claude-sonnet-4-5", client: Any | None = None) -> None:
+    def __init__(
+        self, model: str = "claude-sonnet-4-5", client: Any | None = None, system: str = DEFAULT_SYSTEM
+    ) -> None:
         if client is None:
             import anthropic
 
             client = anthropic.Anthropic()
-        self._completer = AnthropicCompleter(model, client)
+        self._completer = AnthropicCompleter(model, client, system=system)
         self.name = f"anthropic:{model}"
 
     def run(self, user_message: str, tools: list[ToolSpec], execute: ExecuteFn) -> Trajectory:
@@ -179,12 +189,14 @@ class AnthropicAdapter:
 
 
 class OpenAIAdapter:
-    def __init__(self, model: str = "gpt-4.1", client: Any | None = None) -> None:
+    def __init__(
+        self, model: str = "gpt-4.1", client: Any | None = None, system: str = DEFAULT_SYSTEM
+    ) -> None:
         if client is None:
             from openai import OpenAI
 
             client = OpenAI(**openai_connect_kwargs())
-        self._completer = OpenAICompleter(model, client)
+        self._completer = OpenAICompleter(model, client, system=system)
         self.name = f"openai:{model}"
 
     def run(self, user_message: str, tools: list[ToolSpec], execute: ExecuteFn) -> Trajectory:
@@ -194,8 +206,10 @@ class OpenAIAdapter:
 class MinimalAgent(OpenAIAdapter):
     """Plain-Python tool loop (same OpenAI wire format). The wrap is the loop, not the SDK."""
 
-    def __init__(self, model: str = "gpt-4.1", client: Any | None = None) -> None:
-        super().__init__(model=model, client=client)
+    def __init__(
+        self, model: str = "gpt-4.1", client: Any | None = None, system: str = DEFAULT_SYSTEM
+    ) -> None:
+        super().__init__(model=model, client=client, system=system)
         self.name = f"minimal:{model}"
 
 
@@ -279,17 +293,19 @@ def _to_openai(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return out
 
 
-def build_agent(kind: str, model: str | None = None) -> Any:
+def build_agent(kind: str, model: str | None = None, system: str = DEFAULT_SYSTEM) -> Any:
     if kind == "refuse":
         return RefuseAgent()
     if kind == "obey":
         return ObeyAgent()
     if kind == "anthropic":
-        return AnthropicAdapter(model=model or os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-5"))
+        return AnthropicAdapter(
+            model=model or os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-5"), system=system
+        )
     if kind == "openai":
-        return OpenAIAdapter(model=model or os.environ.get("OPENAI_MODEL", "gpt-4.1"))
+        return OpenAIAdapter(model=model or os.environ.get("OPENAI_MODEL", "gpt-4.1"), system=system)
     if kind in {"minimal", "python"}:
-        return MinimalAgent(model=model or os.environ.get("OPENAI_MODEL", "gpt-4.1"))
+        return MinimalAgent(model=model or os.environ.get("OPENAI_MODEL", "gpt-4.1"), system=system)
     if kind == "langgraph":
         return LangGraphAdapter(model=model or "openai:gpt-4.1")
     raise SystemExit(f"unknown agent {kind}")

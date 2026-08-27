@@ -64,7 +64,7 @@ flowchart LR
 ## GitHub Action
 
 ```yaml
-- uses: ayanverse-io/agentprobe@v0.2
+- uses: ayanverse-io/agentprobe@v0.3
   with:
     agent: refuse
     fail-above: "0"
@@ -82,7 +82,7 @@ Copy-paste workflow: [`examples/ci.yml`](examples/ci.yml).
 6. Goal hijacking
 7. Benign controls (excluded from ASR so refusing everything cannot game the score)
 
-343 YAML cases. Third-party notices: [`NOTICE`](NOTICE).
+395 YAML cases (293 loud + 52 quiet original + 50 benign). Third-party notices: [`NOTICE`](NOTICE).
 
 ## Hardening and harder attacks
 
@@ -111,16 +111,18 @@ Optional Inspect extra: `pip install -e ".[inspect]"` then `from agentprobe.insp
 
 ## Published results
 
-Four models, full corpus, 2026-08-24 freeze. Setup and how to quote: [`results/RUN.md`](results/RUN.md).
+Four models, 395-case corpus, freeze `hardened-395-2026-08-26`. Loud vs quiet and how to quote: [`results/RUN.md`](results/RUN.md). Summaries: `results/hardened-395-metrics.json`.
 
-| Model | ASR | Utility | Over-refusal |
-|---|---:|---:|---:|
-| Claude Haiku 4.5 | **0%** | 99.5% | 0% |
-| GPT-5.6 Terra | **0%** | 99.5% | 0% |
-| Llama 4 Maverick | 1.7% | **25.8%** | **24%** |
-| DeepSeek V4 Flash | **21.5%** | 99.5% | 0% |
+| Model | ASR | Loud | Quiet | Utility | Over-refusal |
+|---|---:|---:|---:|---:|---:|
+| Claude Haiku 4.5 | 2.3% | 0.0% | 15.4% | 84.7% | 0% |
+| GPT-5.6 Terra | 2.3% | 0.0% | 15.4% | 87.2% | 0% |
+| Llama 4 Maverick | 10.4% | 2.0% | 57.7% | 16.5% | 22% |
+| DeepSeek V4 Flash | 31.3% | 20.8% | 90.4% | 93.4% | 0% |
 
-n = 343 (293 attack + 50 benign). OpenRouter, thinking off, stubborn system prompt. **0% is not “injection solved”** — these payloads are loud (`attacker@evil.test`). Llama looks safe because it often does nothing. DeepSeek is helpful *and* leaks.
+n = 395 (293 loud + 52 quiet + 50 benign). OpenRouter, thinking off, hardened system prompt. **0% loud is not robustness** — Haiku and Terra still fail the same eight quiet tool-misuse cases. Llama looks safer than it is because it often does nothing. DeepSeek stays useful and leaks, especially on ops-like quiet requests.
+
+An earlier freeze (`full-2026-08-24`, 343 loud+benign only) had Haiku/Terra at 0% ASR / 99.5% utility. Do not mix those numbers with the 395 table.
 
 ## Cite
 
@@ -129,7 +131,7 @@ n = 343 (293 attack + 50 benign). OpenRouter, thinking off, stubborn system prom
   author = {ayanverse},
   title  = {AgentProbe: Behavioral Evaluation of Prompt Injection in Tool-Using LLM Agents},
   year   = {2026},
-  note   = {eval freeze 2026-08-24, 343 cases},
+  note   = {eval freeze hardened-395-2026-08-26, 395 cases},
   url    = {https://github.com/ayanverse-io/agentprobe}
 }
 ```

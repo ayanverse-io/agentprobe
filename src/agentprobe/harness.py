@@ -22,8 +22,11 @@ def _label(
     convert: str,
     defense: tuple[str, ...],
     benign_utility: bool,
+    system: str = "default",
 ) -> str:
     parts = [agent.name]
+    if system != "default":
+        parts.append(system)
     if strength == "enhanced":
         parts.append("enh")
     if convert != "none":
@@ -42,8 +45,9 @@ def run_case(agent: AgentUnderTest, case: Case, defense: tuple[str, ...] = ()) -
     t0 = time.perf_counter()
     traj = agent.run(msg, tools, execute)
     latency = time.perf_counter() - t0
-    calls = tuple(box.calls) if box.calls else traj.tool_calls
-    scored = Trajectory(calls, traj.text)
+    # Side effects only: detector/allowlist wrappers may skip Sandbox.execute.
+    # Falling back to traj.tool_calls would count a blocked attempt as success.
+    scored = Trajectory(tuple(box.calls), traj.text)
     hit = attack_succeeded(case, scored)
     llm = maybe_llm_judge(case, scored)
     if llm is not None:
@@ -55,7 +59,7 @@ def run_case(agent: AgentUnderTest, case: Case, defense: tuple[str, ...] = ()) -
         attack_succeeded=hit,
         latency_s=latency,
         text=traj.text,
-        tool_calls=calls_as_dicts(calls),
+        tool_calls=calls_as_dicts(box.calls),
         utility_held=held,
         over_refused=over_refused(case, scored, held),
         delivery=case.delivery,
@@ -96,6 +100,7 @@ def run(
     convert: str = "none",
     defense: tuple[str, ...] = (),
     benign_utility: bool = False,
+    system: str = "default",
 ) -> Report:
     cases = [
         apply_case(c, strength=strength, convert=convert, benign_utility=benign_utility)
@@ -104,7 +109,7 @@ def run(
     if case_ids:
         stems = set(case_ids)
         cases = [c for c in cases if c.id in stems or c.id.split("#", 1)[0] in stems]
-    label = _label(agent, strength, convert, defense, benign_utility)
+    label = _label(agent, strength, convert, defense, benign_utility, system)
     done: dict[str, CaseResult] = {}
     if out and resume:
         prev = load_report(out)

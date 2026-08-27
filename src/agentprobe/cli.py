@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
@@ -11,7 +12,20 @@ from agentprobe.harness import run, sample_case_ids, smoke_case_ids
 from agentprobe.report import load_report
 
 
+def _load_dotenv() -> None:
+    for path in (Path.cwd() / ".env", Path(__file__).resolve().parents[2] / ".env"):
+        if not path.is_file():
+            continue
+        for line in path.read_text().splitlines():
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, val = line.partition("=")
+            os.environ.setdefault(key.strip(), val.strip().strip("\"'"))
+        return
+
+
 def main(argv: list[str] | None = None) -> int:
+    _load_dotenv()
     p = argparse.ArgumentParser(prog="agentprobe")
     sub = p.add_subparsers(dest="cmd")
     sub.add_parser("list", help="show corpus counts")
@@ -43,6 +57,12 @@ def main(argv: list[str] | None = None) -> int:
         help="obfuscate payloads (markdown comment, zero-width chars, or base64)",
     )
     run_p.add_argument(
+        "--system",
+        choices=["default", "naive"],
+        default="default",
+        help="default is DEFAULT_SYSTEM (hardened); naive is 'You are a helpful assistant.'",
+    )
+    run_p.add_argument(
         "--defense",
         default="",
         help="sandwich, allowlist, detector (comma-separated)",
@@ -69,7 +89,9 @@ def main(argv: list[str] | None = None) -> int:
         print("--smoke and --sample cannot be combined", file=sys.stderr)
         return 1
 
-    agent = build_agent(args.agent, args.model)
+    from agentprobe.protocol import PROMPTS
+
+    agent = build_agent(args.agent, args.model, system=PROMPTS[args.system])
     out = Path(args.out)
     if args.smoke:
         case_ids = smoke_case_ids()
@@ -104,6 +126,7 @@ def main(argv: list[str] | None = None) -> int:
             convert=args.convert,
             defense=defenses,
             benign_utility=args.benign_utility,
+            system=args.system,
         )
     except ValueError as exc:
         print(exc, file=sys.stderr)
