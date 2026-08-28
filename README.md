@@ -126,6 +126,23 @@ An earlier freeze (`full-2026-08-24`, 343 loud+benign only) had Haiku/Terra at 0
 
 ## Cite
 
+Paper (preprint):
+
+```bibtex
+@misc{pena2026agentprobe,
+  author       = {Pe{\~n}a Hern{\'a}ndez, Adri{\'a}n},
+  title        = {Benchmarking Prompt-Injection Robustness of Tool-Using {LLM} Agents},
+  year         = {2026},
+  month        = aug,
+  publisher    = {Zenodo},
+  version      = {1.0},
+  doi          = {10.5281/zenodo.22147872},
+  url          = {https://doi.org/10.5281/zenodo.22147872}
+}
+```
+
+Software:
+
 ```bibtex
 @software{ayanverse2026agentprobe,
   author = {ayanverse},
